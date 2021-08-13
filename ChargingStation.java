@@ -1,7 +1,7 @@
 public class ChargingStation extends Entity{
 
-    public ChargingStation(Position pos, Warehouse warehouse){
-        super(pos, warehouse);
+    public ChargingStation(String id,Position pos, Warehouse warehouse){
+        super(id, pos, warehouse);
 
     }
 }
