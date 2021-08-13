@@ -1,20 +1,26 @@
+import java.util.HashMap;
 public class Warehouse {
-    Robot[] robots;
-    ChargingStation[] chargingStations;
+    private HashMap<String,Robot> robots;
+    private HashMap<String,ChargingStation> chargingStations;
     // An array of objects that handle the packing of items.
     // Robots will receive a job request and deliver to a specific packing station.
-    PackingStation[] packingStations;
+    private HashMap<String,PackingStation> packingStations;
     // An array of shelf objects that contain the items to be packed
-    Shelf[] shelves;
-    Order[] orders;
-    Entity[][] floorPlan;
-    Entity[][] robotFloorPlan;
+    private HashMap<String,Shelf> shelves;
+    private Order[] orders;
+    private Entity[][] floorPlan;
+    private Entity[][] robotFloorPlan;
 
     public Warehouse() {
-        ChargingStation cs = new ChargingStation(new Position(5, 1), this);
-        PackingStation ps = new PackingStation(new Position(1, 1), this);
-        Robot r = new Robot(5, 5, new Position(5, 1), this);
-        Shelf s = new Shelf(new Position(4,4), this);
+        ChargingStation cs = new ChargingStation("cs1",new Position(5, 1), this);
+        PackingStation ps = new PackingStation("ps1",new Position(1, 1), this);
+        Robot r = new Robot("r1",5, 5, new Position(5, 1), this);
+        Shelf s = new Shelf("s1",new Position(4,4), this);
+
+        chargingStations.put(cs.getId(),cs);
+        packingStations.put(ps.getId(),ps);
+        robots.put(r.getId(), r);
+        shelves.put(s.getId(),s);
 
         floorPlan = new Entity[10][10];
         robotFloorPlan = new Entity[10][10];
@@ -27,19 +33,19 @@ public class Warehouse {
 
     }
 
-    public Robot[] getRobots() {
+    public HashMap<String,Robot> getRobots() {
         return robots;
     }
 
-    public ChargingStation[] getChargingStations() {
+    public HashMap<String,ChargingStation> getChargingStations() {
         return chargingStations;
     }
 
-    public PackingStation[] getPackingStations() {
+    public HashMap<String,PackingStation> getPackingStations() {
         return packingStations;
     }
 
-    public Shelf[] getShelves() {
+    public HashMap<String,Shelf> getShelves() {
         return shelves;
     }
 

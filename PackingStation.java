@@ -1,6 +1,6 @@
 public class PackingStation extends Entity{
 
-    public PackingStation(Position pos, Warehouse warehouse){
-        super(pos, warehouse);
+    public PackingStation(String id, Position pos, Warehouse warehouse){
+        super(id, pos, warehouse);
     }
 }

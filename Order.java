@@ -7,15 +7,26 @@
 public class Order {
     private String orderId;
     private String shelfId;
+    private String packingStationId;
     private int numItems;
 
-    public Order(String orderId, String shelfId, int numItems) {
+    public Order(String orderId, String shelfId,String packingStationId, int numItems) {
         this.orderId = orderId;
+        this.packingStationId = packingStationId;
         this.shelfId = shelfId;
         this.numItems = numItems;
     }
 
     public String getShelfId(){
         return this.shelfId;
+    }
+    public String getId(){
+        return this.orderId;
+    }
+    public String getPackingStationId(){
+        return this.packingStationId;
+    }
+    public int getNumItems(){
+        return this.numItems;
     }
 }

@@ -1,5 +1,3 @@
-import java.util.UUID;
-
 public abstract class Entity {
 
     private String id;
@@ -8,8 +6,8 @@ public abstract class Entity {
 
     public Warehouse warehouse;
 
-    public Entity(Position pos, Warehouse warehouse) {
-        this.id = UUID.randomUUID().toString();
+    public Entity(String id, Position pos, Warehouse warehouse) {
+        this.id = id;
         this.pos = pos;
         this.warehouse = warehouse;
     }

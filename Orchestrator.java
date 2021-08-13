@@ -3,23 +3,24 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
-
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 
 public class Orchestrator {
-    HashMap<Job,Robot> activeJobs = new HashMap<Job,Robot>();
-    //Robot[] robots;
-    HashMap<String, Robot> robots = new HashMap<String,Robot>();
-    ChargingStation[] chargingStations;
+    HashMap<String, String> activeJobs = new HashMap<String, String>();
+    // Robot[] robots;
+    HashMap<String, Robot> robots = new HashMap<String, Robot>();
+    HashMap<String, ChargingStation> chargingStations;
     // An array of objects that handle the packing of items.
     // Robots will receive a job request and deliver to a specific packing station.
-    PackingStation[] packingStations;
+    HashMap<String, PackingStation> packingStations;
     // An array of shelf objects that contain the items to be packed
-    Shelf[] shelves;
+    HashMap<String, Shelf> shelves;
     Order[] orders;
     Job[] jobs;
     Entity[][] floorTemplate;
+    Entity[][] robotFloorPlan;
     int floorSizeX;
     int floorSizeY;
     int floorArea;
@@ -32,63 +33,92 @@ public class Orchestrator {
     };
 
     public static void main(String args[]) {
-
         Warehouse wh = new Warehouse();
-
-        Orchestrator o = new Orchestrator(wh.getRobots(), wh.getOrders(), wh.getPackingStations(),
-                wh.getChargingStations(), wh.getShelves(), wh.getFloorPlan());
-
+        Orchestrator o = new Orchestrator(wh);
         for (Position p : o.createRoute(new Position(0, 0), new Position(4, 4))) {
             System.out.println(p.toString() + ": " + p.getX() + "," + p.getY());
         }
     }
 
-    public Orchestrator(Robot[] robots, Order[] orders, PackingStation[] packingStations,
-            ChargingStation[] chargingStations, Shelf[] shelves, Entity[][] floorTemplate) {
+    public Orchestrator(Warehouse wh) {
+        this.robots = wh.getRobots();
+        this.shelves = wh.getShelves();
+        this.packingStations = wh.getPackingStations();
+        this.chargingStations = wh.getChargingStations();
 
-        this.robots = robots;
-
-        this.orders = orders;
-
-        this.shelves = shelves;
-        this.packingStations = packingStations;
-        
-        this.floorTemplate = floorTemplate;
+        this.floorTemplate = wh.getFloorPlan();
+        this.robotFloorPlan = wh.getRobotFloorPlan();
         this.floorSizeX = floorTemplate.length;
         this.floorSizeY = floorTemplate[0].length;
         this.floorArea = floorSizeX * floorSizeY;
 
-        createJobs(orders);
+        createJobs(wh.getOrders());
+
     }
-    public Shelf getShelfById(String shelfId){
-        for (Shelf s : shelves){
-            if (s.getId().equals(shelfId)){
-                return s;
-            }
-        }
-        return null;
+
+    public Shelf getShelfById(String shelfId) {
+        return shelves.get(shelfId);
+
     }
-    public void createJobs(Order[] orders){
+    /**
+     * Create all jobs that need to be completed.
+     * @author Kieran Detheridge
+     * @param orders an array of orders
+     */
+    public void createJobs(Order[] orders) {
         for (Order order : orders) {
-            //get the shelf using the shelf ID
+            // get the shelf using the shelf ID
             String shelfId = order.getShelfId();
             Shelf shelf = getShelfById(shelfId);
-            //if the shelf could not be found,
-            if (shelf == null){
-                //stop the simulation.
+            // if the shelf could not be found,
+            if (shelf == null) {
+                // stop the simulation.
                 System.exit(1);
-
             }
 
-            //get the location of the shelf
+            // get the location of the shelf
             Position shelfPos = shelf.getPos();
 
-            //Find an available Robot
-            //calculate a route to the shelf
-
+            // Find an available Robot
+            //
+            //lookup each of the robots
+            Collection<String> activeRobotIds = activeJobs.values();
+            //create a copy of the robot Ids from the robots map
+            HashSet<String> availableRobots = new HashSet<String>(robots.keySet());
+            //remove the active robots from the set
+            availableRobots.removeAll(activeRobotIds);
+            //create the max-value int so the first robot looked at below
+            //is assigned as the shortest distance robot until a closer one is found.
+            int shortestDist = Integer.MAX_VALUE;
+            Robot closestRobot = null;
+            //find the robot with the shortest Manhattan distance to the target.
+            for (String s: availableRobots){
+                Robot currRobot = robots.get(s);
+                Position currRobotPos = currRobot.getPos();
+                //The Manhattan distance between the current robot and the shelf
+                int currRobotDist = currRobotPos.calculateManhattanDistance(shelfPos);
+                //If this robot is closer to the target than the previous
+                if (currRobotDist < shortestDist){
+                    shortestDist = currRobotDist;
+                    closestRobot = currRobot;
+                }
+            }
+            if (closestRobot == null){
+                System.out.println("No available robots.");
+                return;
+            }
+            // calculate a route to the shelf
+            LinkedList<Position> route = createRoute(closestRobot.getPos(),shelfPos);
+            //If a route was found,
+            if(!route.isEmpty()){
+                //assign the route to the robot
+                assignJob();
+            }
         }
     }
-
+    private boolean assignJob(Job j, Robot r){
+        return true;
+    }
     /**
      * Creates a Linked List of Position objects that a robot should inherit to
      * represent it moving along the path specified.

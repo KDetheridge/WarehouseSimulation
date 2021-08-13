@@ -20,8 +20,8 @@ public class Robot extends Entity {
      * @param currentPosition the position that this robot will start at as an XY
      *                        grid reference.
      */
-    public Robot(int capacity, int startCharge, String jobId, Position currentPosition, Warehouse warehouse) {
-        super(currentPosition, warehouse);
+    public Robot(String id, int capacity, int startCharge, String jobId, Position currentPosition, Warehouse warehouse) {
+        super(id, currentPosition, warehouse);
         this.chargeCapacity = capacity;
         this.currentCharge = startCharge;
         this.jobId = jobId;
@@ -39,8 +39,8 @@ public class Robot extends Entity {
      *                        grid reference.
      * 
      */
-    public Robot(int capacity, int startCharge, Position currentPosition, Warehouse warehouse) {
-        super(currentPosition, warehouse);
+    public Robot(String id, int capacity, int startCharge, Position currentPosition, Warehouse warehouse) {
+        super(id, currentPosition, warehouse);
 
         this.chargeCapacity = capacity;
         this.currentCharge = startCharge;
