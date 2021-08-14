@@ -8,13 +8,18 @@ public class Warehouse {
     // An array of shelf objects that contain the items to be packed
     private HashMap<String,Shelf> shelves;
     private Order[] orders;
+
+    private int floorPlanX;
+    private int floorPlanY;
     private Entity[][] floorPlan;
     private Entity[][] robotFloorPlan;
 
     public Warehouse() {
+        this.floorPlanX = 10;
+        this.floorPlanY = 10;
         ChargingStation cs = new ChargingStation("cs1",new Position(5, 1), this);
         PackingStation ps = new PackingStation("ps1",new Position(1, 1), this);
-        Robot r = new Robot("r1",5, 5, new Position(5, 1), this);
+        Robot r = new Robot("r1",5, 5,cs, new Position(5, 1), this);
         Shelf s = new Shelf("s1",new Position(4,4), this);
 
         chargingStations.put(cs.getId(),cs);
@@ -22,8 +27,8 @@ public class Warehouse {
         robots.put(r.getId(), r);
         shelves.put(s.getId(),s);
 
-        floorPlan = new Entity[10][10];
-        robotFloorPlan = new Entity[10][10];
+        floorPlan = new Entity[floorPlanX][floorPlanY];
+        robotFloorPlan = new Entity[floorPlanX][floorPlanY];
 
         floorPlan[cs.getXPos()][cs.getYPos()] = cs;
         floorPlan[ps.getXPos()][ps.getYPos()] = ps;
@@ -70,6 +75,13 @@ public class Warehouse {
 
     public Entity[][] getFloorPlan(){
         return floorPlan;
+    }
+
+    public int getFloorPlanX(){
+        return floorPlanX;
+    }
+    public int getFloorPlanY(){
+        return floorPlanY;
     }
     public Entity[][] getRobotFloorPlan(){
         return robotFloorPlan;

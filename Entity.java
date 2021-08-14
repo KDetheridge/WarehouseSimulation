@@ -8,6 +8,11 @@ public abstract class Entity {
 
     public Entity(String id, Position pos, Warehouse warehouse) {
         this.id = id;
+        if (!pos.isValid(warehouse.getFloorPlanX(), warehouse.getFloorPlanY())){
+            System.out.println("Invalid Entity Position: " + pos);
+            System.out.println("Stopping simulation");
+            System.exit(1);
+        }
         this.pos = pos;
         this.warehouse = warehouse;
     }

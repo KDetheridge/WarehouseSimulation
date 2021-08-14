@@ -3,11 +3,13 @@ import java.util.LinkedList;
 public class Job{
     String id;
     Order order;
-    LinkedList<Position> route;
-    public Job(String id,Order order, LinkedList<Position> route){
+    LinkedList<String> actions;
+    LinkedList<LinkedList<Position>> route;
+    public Job(String id,Order order, LinkedList<LinkedList<Position>> route, LinkedList<String> actions){
         this.id = id;
         this.order = order;
         this.route = route;
+        this.actions = actions;
 
     }
 
