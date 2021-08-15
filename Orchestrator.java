@@ -1,4 +1,4 @@
-import java.util.LinkedList;
+import Structures.LinkedList;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;

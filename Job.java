@@ -1,5 +1,5 @@
 
-import java.util.LinkedList;
+import Structures.LinkedList;
 public class Job{
     String id;
     Order order;
@@ -18,5 +18,9 @@ public class Job{
     }
     public String getOrderId(){
         return this.order.getId();
+    }
+
+    public LinkedList<Position> getNextRoute(){
+        return route.next().getData();
     }
 }
