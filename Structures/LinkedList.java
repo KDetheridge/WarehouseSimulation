@@ -24,12 +24,16 @@ public class LinkedList<T> {
      */
     public void add(T data) {
         Node<T> node = new Node<T>(data);
+        //Head is null (Linked List is empty)
         if (this.head == null) {
             this.head = node;
             this.tail = node;
-            
+            this.head.setNext(tail);
+        //Head is not null
         } else {
+            //set the next node of the current tail to the new node
             this.tail.setNext(node);
+            //set the tail to the new node.
             this.tail = node;
         }
         this.count +=1;
@@ -115,5 +119,10 @@ public class LinkedList<T> {
             listToAdd.next();
         }
         return this;
+    }
+
+    public int size(){
+
+        return this.count;
     }
 }
