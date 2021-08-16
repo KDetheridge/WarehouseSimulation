@@ -11,6 +11,8 @@ import java.util.Comparator;
  * @author Kieran Detheridge
  */
 public class Orchestrator {
+    Warehouse wh;
+    //Job id -> Robot id
     HashMap<String, String> activeJobs = new HashMap<String, String>();
     // Robot[] robots;
     HashMap<String, Robot> robots = new HashMap<String, Robot>();
@@ -20,13 +22,29 @@ public class Orchestrator {
     HashMap<String, PackingStation> packingStations;
     // An array of shelf objects that contain the items to be packed
     HashMap<String, Shelf> shelves;
-    Order[] orders;
-    Job[] jobs;
+    HashMap<String,Order> orders;
+    HashMap<String,Job> jobs;
     Entity[][] floorTemplate;
     Entity[][] robotFloorPlan;
     int floorSizeX;
     int floorSizeY;
     int floorArea;
+
+    public Orchestrator(Warehouse wh) {
+        this.wh = wh;
+        this.robots = wh.getRobots();
+        this.shelves = wh.getShelves();
+        this.packingStations = wh.getPackingStations();
+        this.chargingStations = wh.getChargingStations();
+        this.orders = wh.getOrders();
+        this.floorTemplate = wh.getFloorPlan();
+        this.robotFloorPlan = wh.getRobotFloorPlan();
+        this.floorSizeX = floorTemplate.length;
+        this.floorSizeY = floorTemplate[0].length;
+        this.floorArea = floorSizeX * floorSizeY;
+
+
+    }
     // define a new comparator to be used for sorting the map entries of the
     // neighbourList
     Comparator<Map.Entry<Position, Integer>> positionMapEntrySortValueAsc = new Comparator<Map.Entry<Position, Integer>>() {
@@ -46,26 +64,33 @@ public class Orchestrator {
     public static void main(String args[]) {
         Warehouse wh = new Warehouse();
         Orchestrator o = new Orchestrator(wh);
-        for (Position p : o.createRoute(new Position(0, 0), new Position(4, 4))) {
-            System.out.println(p.toString() + ": " + p.getX() + "," + p.getY());
+        Order order1;
+        try{
+           order1 = new Order("o1","s1","ps1",2, wh);
+           o.orders.put(order1.getId(),order1);
         }
+        catch(Exception e){
+            System.out.println(e.toString());
+            System.exit(1);
+        }
+        
+        
+        Job job1 = o.createJobs(o.orders.values());
+        //System.out.println(job1);
+        System.out.println("Job created: "+ job1.toString());
+        for(LinkedList<Position> route : job1.getRoutes()){
+            System.out.println("route: " + route);
+            for(Position pos : route){
+                System.out.println("Position: " + pos);
+            }
+        }
+        Robot currRobot = o.robots.get(o.activeJobs.get(job1.getId()));
+        System.out.println(currRobot);
+        System.out.println("Robot: " + o.robots.get(o.activeJobs.get(job1.getId())).getId() + "has job with id " + currRobot.getJob().getId());
+
     }
 
-    public Orchestrator(Warehouse wh) {
-        this.robots = wh.getRobots();
-        this.shelves = wh.getShelves();
-        this.packingStations = wh.getPackingStations();
-        this.chargingStations = wh.getChargingStations();
-
-        this.floorTemplate = wh.getFloorPlan();
-        this.robotFloorPlan = wh.getRobotFloorPlan();
-        this.floorSizeX = floorTemplate.length;
-        this.floorSizeY = floorTemplate[0].length;
-        this.floorArea = floorSizeX * floorSizeY;
-
-        createJobs(wh.getOrders());
-
-    }
+    
 
     public Shelf getShelfById(String shelfId) {
         return shelves.get(shelfId);
@@ -81,7 +106,7 @@ public class Orchestrator {
      * @param pos the position to check the robots against.
      * @return ArrayList of Map Entries containing Robot->Distance from target position.
      */
-    private ArrayList<Map.Entry<Robot, Integer>> getRobotsOrderedByDistance(Position pos){
+    private ArrayList<Map.Entry<Robot, Integer>> getAvailableRobotsOrderedByDistance(Position pos){
         //lookup each of the robots
         Collection<String> activeRobotIds = activeJobs.values();
         //create a copy of the robot Ids from the robots map
@@ -106,13 +131,12 @@ public class Orchestrator {
         return robotDistancesOrderedList;
     }
 
-
     /**
      * Create all jobs that need to be completed.
      * @author Kieran Detheridge
      * @param orders an array of orders
      */
-    public void createJobs(Order[] orders) {
+    public Job createJobs(Collection<Order> orders) {
         for (Order order : orders) {
             // get the shelf using the shelf ID
             String shelfId = order.getShelfId();
@@ -134,41 +158,76 @@ public class Orchestrator {
 
             // get the position of the shelf
             Position shelfPos = shelf.getPos();
-            ArrayList<Map.Entry<Robot,Integer>> robotsDistanceAsc = getRobotsOrderedByDistance(shelfPos);
+            ArrayList<Map.Entry<Robot,Integer>> robotsDistanceAsc = getAvailableRobotsOrderedByDistance(shelfPos);
             if (robotsDistanceAsc == null){
                 System.out.println("No available robots.");
-                return;
+                return null;
             }
-            LinkedList<Position> routeToShelf;
-            LinkedList<Position> routeToPackingStation;
-            LinkedList<Position> routeToChargingStation;
-            int totalJourneyCost;
+            LinkedList<Position> routeToShelf = null;
+            LinkedList<Position> routeToPackingStation = null;
+            LinkedList<Position> routeToChargingStation = null;
+            int totalJourneyCost = 0;
             //for each of the robots in order of ascending distance from the target,
             for(Map.Entry<Robot, Integer> e : robotsDistanceAsc){
                 Robot r = e.getKey();
+                System.out.println("Robot in createJobs: " + r);
+                System.out.println("\n\nRoute from Robot at position "+ r.getPos().toString() +" to Shelf at Position "+ shelfPos.toString());
+
                 // calculate a route from the robot to the shelf
                 routeToShelf = createRoute(r.getPos(),shelfPos);
-
+                
                 //if a route to the shelf was found,
                 if (!(routeToShelf == null)){
+                    System.out.println("\n\nRoute from Robot at Shelf position " + shelfPos.toString() + "to Packing Station at Position "+ packingStationPos.toString());
+
                     //calculate a route from the shelf to the packing station 
                     routeToPackingStation = createRoute(shelfPos,packingStationPos);
+
                     //if a route to the packing station was found,
                     if (!(routeToPackingStation == null)){
+                        ChargingStation cs = r.getChargingStation();
+                        System.out.println("\n\nRoute from packing station at position "+packingStationPos.toString()+" to ChargingStation at Position "+ r.getChargingStation().getPos().toString());
+
                         //calculate a route from the packing station to the charging station for this robot 
                         routeToChargingStation = createRoute(packingStationPos,r.getChargingStation().getPos());
+
                     }
-                    //stop the loop as this is the closest robot to the target.
-                    break;
+
+                }
+                if(!(routeToChargingStation == null)){
+                    totalJourneyCost = routeToShelf.size() + routeToPackingStation.size() + routeToChargingStation.size();
+                    System.out.println("Total Journey Cost: " + totalJourneyCost);
+                    System.out.println("Robot current charge: " + r.getCurrentCharge());
+                    //if the current robot does not have enough charge to complete the journey,
+                    if(r.getCurrentCharge() < totalJourneyCost){
+                        //check the next one
+                        continue;
+                    }
+                    else{
+                        LinkedList<LinkedList<Position>> jobRoute = new LinkedList<LinkedList<Position>>();
+                        jobRoute.add(routeToShelf);
+                        jobRoute.add(routeToPackingStation);
+                        jobRoute.add(routeToChargingStation);
+                        
+                        //create job
+                        Job job = new Job("j1",order,jobRoute);
+
+                        assignJob(job, r);
+                        //stop the loop as this is the closest robot to the target that can complete the journey
+
+                        return job;
+                    
+                    }
                 }
             }
-
-            //assign the job to the robot
-            assignJob();
+            return null;
         }
+        return null;
     }
 
     private boolean assignJob(Job j, Robot r){
+        r.setJob(j);
+        activeJobs.put(j.getId(), r.getId());
         return true;
     }
     /**
@@ -204,10 +263,7 @@ public class Orchestrator {
         neighbours.put(right, endPos.calculateManhattanDistance(right));
         HashSet<Position> neighbourSet = new HashSet<Position>(neighbours.keySet());
 
-        // remove all of the already visited nodes from the neighbourSet.
-        // Sets created this way are backed by the map, so and changes here
-        // are reflected in the neighbours map.
-        System.out.println("Neighbour Set: " + neighbourSet);
+
         // Create an array list from the entries in the neighbours map
         ArrayList<Map.Entry<Position, Integer>> neighbourList = new ArrayList<Map.Entry<Position, Integer>>(
                 neighbours.entrySet());
@@ -219,9 +275,6 @@ public class Orchestrator {
         for (Map.Entry<Position, Integer> entry : neighbourList) {
             // Get the position object
             Position neighbourPos = entry.getKey();
-
-            System.out.println("neighbour: (" + neighbourPos.getX() + ", " + neighbourPos.getY() + ") Distance: "
-                    + entry.getValue());
 
             // if this entry is not a valid position,
             if (!neighbourPos.isValid(floorSizeX, floorSizeY)) {

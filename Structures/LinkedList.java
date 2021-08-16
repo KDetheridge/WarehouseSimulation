@@ -1,15 +1,16 @@
 
 package Structures;
 
+import java.util.Iterator;
+
 /**
  * @author Kieran Detheridge A generic LinkedList implementation that allows the
  *         retrieval of the next node through the use of methods.
  */
-public class LinkedList<T> {
+public class LinkedList<T> implements Iterable<T> {
     private Node head;
     private Node tail;
     private int count;
-
     public LinkedList() {
         this.head = null;
         this.tail = null;
@@ -28,9 +29,17 @@ public class LinkedList<T> {
         if (this.head == null) {
             this.head = node;
             this.tail = node;
-            this.head.setNext(tail);
+        } 
+        
+        //if only the head exists
+        else if(this.count == 1){
+            //set the tail to the new node
+            this.tail = node;
+            //set the next node of the head to the new node
+            this.head.setNext(node);
+        }
         //Head is not null
-        } else {
+        else {
             //set the next node of the current tail to the new node
             this.tail.setNext(node);
             //set the tail to the new node.
@@ -60,24 +69,7 @@ public class LinkedList<T> {
         this.count+=1;
     }
 
-    /**
-     * sets the head to the next node and returns the new head.
-     * 
-     * @author Kieran Detheridge
-     * @return the next node from the linked list.
-     */
-    public Node<T> next() {
-        head = this.head.getNext();
-        return head;
-    }
 
-    /**
-     * @author Kieran Detheridge
-     * @return true if there is a next node, false if not
-     */
-    public boolean hasNext() {
-        return this.head.hasNext();
-    }
 
     /**
      * @author Kieran Detheridge
@@ -106,7 +98,11 @@ public class LinkedList<T> {
         if (this.head == null) {
             this.head = node;
             this.tail = node;
-        } else {
+        } 
+        else if(this.count == 1){
+            this.head.setNext(node);
+        }
+        else {
             this.tail.setNext(node);
             this.tail = node;
         }
@@ -114,9 +110,8 @@ public class LinkedList<T> {
     }
 
     public LinkedList<T> addAll(LinkedList<T> listToAdd) {
-        while (listToAdd.hasNext()) {
-            this.addNode(listToAdd.head());
-            listToAdd.next();
+        for(T element : listToAdd){
+            this.add(element);
         }
         return this;
     }
@@ -124,5 +119,39 @@ public class LinkedList<T> {
     public int size(){
 
         return this.count;
+    }
+
+    @Override
+    // return Iterator instance
+    public Iterator<T> iterator()
+    {
+        return new LinkedListIterator<T>(this);
+    }
+}
+
+
+class LinkedListIterator<T> implements Iterator{
+    Node<T> current;
+    public LinkedListIterator(LinkedList<T> ll){
+        current = ll.head();
+    }
+
+        /**
+     * @author Kieran Detheridge
+     * @return true if there is a next node, false if not
+     */
+    public boolean hasNext() {
+        return current != null;
+    }
+        /**
+     * sets the head to the next node and returns the new head.
+     * 
+     * @author Kieran Detheridge
+     * @return the next node from the linked list.
+     */
+    public T next() {
+        T data = current.getData();
+        current = current.getNext();
+        return data;
     }
 }
