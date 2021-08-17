@@ -17,6 +17,12 @@ public class LinkedList<T> implements Iterable<T> {
         this.count = 0;
     }
 
+    public LinkedList(LinkedList<T> ll){
+        this.head = new Node(ll.head());
+        this.tail = new Node(ll.tail());
+        this.count = ll.size();
+    }
+
     /**
      * Adds an element to the end of the linked list.
      * 

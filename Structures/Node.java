@@ -12,6 +12,17 @@ public class Node<T> {
         this.data = data;
         this.next = null;
     }
+    public Node(Node<T> n){
+        this.data = n.getData();
+        //only inherit the next node if one exists. Don't want to create a new node with null
+        if (n.hasNext()){
+            this.next = new Node(n.getNext());
+
+        }
+        else{
+            this.next = null;
+        }
+    }
 
     public boolean hasNext() {
         if (this.next == null) {
