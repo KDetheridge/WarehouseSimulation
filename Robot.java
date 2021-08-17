@@ -5,12 +5,20 @@
  * 
  * @author Kieran Detheridge
  */
-public class Robot extends Entity {
+public class Robot extends Entity  {
+
+
+    public class RobotChargeDepletedException extends Exception{
+        public RobotChargeDepletedException(String msg){
+            super(msg);
+        }
+    }
     private int chargeCapacity;
     private int currentCharge;
     private ChargingStation chargingStation;
     private Job currentJob;
     private Position currentPosition;
+    private Position nextPosition;
     private int numOfItems;
 
     /**
@@ -29,6 +37,7 @@ public class Robot extends Entity {
         this.chargingStation = chargingStation;
         this.currentJob = job;
         this.currentPosition = currentPosition;
+
 
     }
 
@@ -105,7 +114,9 @@ this.chargingStation = chargingStation;
      * @param units the number of units to charge the robot by.
      */
     public void increaseCharge(int units) {
-        if (currentCharge < chargeCapacity){
+        //If the robot is on the charging station and the current charge is less than the capacity of this robot
+        if ((this.currentPosition.equals(this.chargingStation.getPos())) && (currentCharge < chargeCapacity)){
+            //charge robot
             currentCharge += units;
 
         }
@@ -164,17 +175,23 @@ this.chargingStation = chargingStation;
      * @param pos the position for the robot to move into.
      * @return true if successful, false if failed.
      */
-    public boolean move(Position pos) {
+    public boolean move(Position pos) throws RobotChargeDepletedException{
         int currX = currentPosition.getX();
         int currY = currentPosition.getY();
         int nextX = pos.getX();
         int nextY = pos.getY();
-        // If the next space is occupied or more than one space away
+
+        if(this.currentCharge == 0){
+            throw new RobotChargeDepletedException("The robot has ran out of charge.");
+        }
+
+        // If the next space is more than one space away
         if (Math.abs(currX - nextX) + Math.abs(currY - nextY) > 1) {
             System.out.println("Robot in position '" + this.getPos().toString() + " cannot move into position "
                     + pos.toString() + " because it is more than one space away.");
             System.exit(1);
         }
+        //If the next space is occupied
         if (checkNextPosition(pos) == false) {
             // return failure flag
             return false;
@@ -183,6 +200,19 @@ this.chargingStation = chargingStation;
         // update current pos
         this.currentPosition.setX(pos.getX());
         this.currentPosition.setY(pos.getY());
+        //If the robot is carrying items
+        if (numOfItems > 0){
+            //decrease the charge by 2 units
+            decreaseCharge(2);
+            System.out.println("Robot"+this.getId()+" moving with items to position " + pos);
+        }
+        else{
+            //decrease the charge by 1 unit
+            decreaseCharge(1);
+            System.out.println("Robot"+this.getId()+" moving without items to position " + pos
+        );
+        }
+        
         // return successful flag
         return true;
     }
@@ -202,4 +232,62 @@ this.chargingStation = chargingStation;
     public int getCurrentCharge() {
         return currentCharge;
     }
+
+    public void completeAction(String action){
+        if (action == null){
+            
+        }
+    }
+
+    /**
+     * The method that controls the actions of the robot. If a job is assigned, the robot should move.
+     * If a job is not assigned, the robot should charge.
+     */
+    public void tick(){
+        //If the next position is not assigned, the job is null now or was null on the last tick.
+        if (this.nextPosition == null){
+            //if the job is not null now,
+            if (this.getJob() != null){
+                System.out.println("Robot has job");
+                //store the next Position from the route
+                this.nextPosition = this.getJob().getNextPosition();
+                //move to it
+                try{
+                    move(nextPosition);
+
+                }
+                catch(RobotChargeDepletedException e){
+                    System.exit(1);
+                }
+            }
+        }
+        //If the last move was successful
+        if (this.currentPosition.equals(this.nextPosition)){
+            //if the currentJob is still in progress
+            if (this.getJob() != null){
+                //store the next Position
+                this.nextPosition = this.getJob().getNextPosition();
+                if (this.nextPosition == null){
+                    //complete action
+                }
+                //move to it
+                try{
+                    move(nextPosition);
+
+                }
+                catch(RobotChargeDepletedException e){
+                    System.exit(1);
+                }
+            }
+            else{
+                //job complete, set the next pos to null
+                this.nextPosition = null;
+                
+                    increaseCharge(this.chargingStation.getChargeUnits());
+                
+            }
+        }
+
+    }
 }
+

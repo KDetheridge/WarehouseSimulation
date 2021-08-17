@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Scanner;
 /**
  * A class that plans and assigns jobs to robots.
  * @author Kieran Detheridge
  */
 public class Orchestrator {
+    Scanner scanner = new Scanner(System.in);
     Warehouse wh;
     //Job id -> Robot id
     HashMap<String, String> activeJobs = new HashMap<String, String>();
@@ -26,11 +28,14 @@ public class Orchestrator {
     HashMap<String,Job> jobs;
     Entity[][] floorTemplate;
     Entity[][] robotFloorPlan;
+    //A Linked list to hold all the positions of all robots at all stages of the 
+    LinkedList<Entity[][]> robotPositionSlices;
     int floorSizeX;
     int floorSizeY;
     int floorArea;
 
     public Orchestrator(Warehouse wh) {
+        
         this.wh = wh;
         this.robots = wh.getRobots();
         this.shelves = wh.getShelves();
@@ -78,15 +83,17 @@ public class Orchestrator {
         Job job1 = o.createJobs(o.orders.values());
         //System.out.println(job1);
         System.out.println("Job created: "+ job1.toString());
-        for(LinkedList<Position> route : job1.getRoutes()){
-            System.out.println("route: " + route);
-            for(Position pos : route){
-                System.out.println("Position: " + pos);
-            }
-        }
-        Robot currRobot = o.robots.get(o.activeJobs.get(job1.getId()));
-        System.out.println(currRobot);
-        System.out.println("Robot: " + o.robots.get(o.activeJobs.get(job1.getId())).getId() + "has job with id " + currRobot.getJob().getId());
+
+        o.tick();
+        // for(LinkedList<Position> route : job1.getRoutes()){
+        //     System.out.println("route: " + route);
+        //     for(Position pos : route){
+        //         System.out.println("Position: " + pos);
+        //     }
+        // }
+        // Robot currRobot = o.robots.get(o.activeJobs.get(job1.getId()));
+        // System.out.println(currRobot);
+        // System.out.println("Robot: " + o.robots.get(o.activeJobs.get(job1.getId())).getId() + "has job with id " + currRobot.getJob().getId());
 
     }
 
@@ -167,6 +174,8 @@ public class Orchestrator {
             LinkedList<Position> routeToPackingStation = null;
             LinkedList<Position> routeToChargingStation = null;
             int totalJourneyCost = 0;
+
+         
             //for each of the robots in order of ascending distance from the target,
             for(Map.Entry<Robot, Integer> e : robotsDistanceAsc){
                 Robot r = e.getKey();
@@ -261,13 +270,11 @@ public class Orchestrator {
         neighbours.put(bottom, endPos.calculateManhattanDistance(bottom));
         neighbours.put(left, endPos.calculateManhattanDistance(left));
         neighbours.put(right, endPos.calculateManhattanDistance(right));
-        HashSet<Position> neighbourSet = new HashSet<Position>(neighbours.keySet());
-
 
         // Create an array list from the entries in the neighbours map
         ArrayList<Map.Entry<Position, Integer>> neighbourList = new ArrayList<Map.Entry<Position, Integer>>(
                 neighbours.entrySet());
-
+        
         // sort the arraylist using the comparator defined above
         Collections.sort(neighbourList, positionMapEntrySortValueAsc);
 
@@ -306,5 +313,20 @@ public class Orchestrator {
         // Nothing found on this recursion, so return an empty linked list.
         return new LinkedList<Position>();
 
+    }
+
+    public void tick(){
+        for(PackingStation ps : packingStations.values()){
+            ps.tick();
+        }
+
+        for(ChargingStation cs : chargingStations.values()){
+            cs.tick();
+        }
+        for(Robot r : robots.values()){
+            r.tick();
+        }
+        scanner.nextLine();
+        
     }
 }

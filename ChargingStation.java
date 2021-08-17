@@ -12,9 +12,13 @@ public class ChargingStation extends Entity{
         
 
     }
+
+
     Robot robot = null;
-    public ChargingStation(String id,Position pos, Warehouse warehouse){
+    private int chargeUnits;
+    public ChargingStation(String id,Position pos, int chargeUnits, Warehouse warehouse){
         super(id, pos, warehouse);
+        this.chargeUnits = chargeUnits;
 
     }
     /**
@@ -31,5 +35,17 @@ public class ChargingStation extends Entity{
 
     public Robot getRobot(){
         return this.robot;
+    }
+
+    public int getChargeUnits(){
+        return this.chargeUnits;
+    }
+    
+    public void setChargeUnits(int val){
+        this.chargeUnits = val;
+    }
+
+    public void tick(){
+
     }
 }

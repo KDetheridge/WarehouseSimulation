@@ -19,7 +19,8 @@ public class Warehouse {
         this.floorPlanY = 10;
         floorPlan = new Entity[floorPlanX][floorPlanY];
         robotFloorPlan = new Entity[floorPlanX][floorPlanY];
-        ChargingStation cs = new ChargingStation("cs1",new Position(5, 1), this);
+        int chargeUnits = 3;
+        ChargingStation cs = new ChargingStation("cs1",new Position(5, 1),chargeUnits, this);
         PackingStation ps = new PackingStation("ps1",new Position(1, 1), this);
         Robot r = new Robot("r1",30, 30,cs, new Position(5, 1), this);
         Shelf s = new Shelf("s1",new Position(4,4), this);
